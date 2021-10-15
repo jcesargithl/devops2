@@ -1,0 +1,50 @@
+name: trabajos secuenciales
+on:
+  push:
+    branches: [ feature/secuencialjobs ]
+  pull_request:
+    branches: [ feature/secuencialjobs ]
+jobs:
+  firstJob:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Crear artifact
+      run: echo "Hola, soy un producto del  firstJob" > myArtifact.txt
+    - name: Cargar el artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: artifact_job1
+        path: myArtifact.txt
+  secondJob:
+    needs: firstJob
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recuperar Artifact guardado
+        uses: actions/download-artifact@v2
+        with:
+          name: artifact_job1
+      - name: Modificar el artifact
+        run: echo "Hola, Soy un producto del secondJob" >>  myArtifact.txt
+      - name: Cargar el artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifact_job2
+          path: myArtifact.txt
+  thirdJob:
+    needs: secondJob
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recuperar Artifact guardado
+        uses: actions/download-artifact@v2
+        with:
+          name: artifact_job2
+      - name: duplicar archivos
+        run: |
+          mkdir project
+          cp myArtifact.txt project/myArtifact.txt
+          cp myArtifact.txt project/myArtifact_copy.txt
+      - name: Cargar el proyecto del artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: final_artifact
+          path: project
